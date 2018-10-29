@@ -243,8 +243,10 @@ Dim width_probability(11, 10) As Double
 Dim pabmatrix(11, 11, 10, 10) As Double
 Dim habmatrix(10, 10) As Double
 Dim uabmatrix(10, 10) As Double
- 
 Dim h_value_att(10) As Double 'save each attribute's h_value
+
+Dim selectset(9) As Integer
+
 
 
 Private Sub Partition_click()
@@ -636,12 +638,6 @@ Private Sub EntropyBase_click()
     List1.AddItem "nothing"
 End Sub
 
-Private Sub forward_click()
-    List1.Clear
-    List1.AddItem uabmatrix(1, 2)
-    List1.AddItem habmatrix(1, 2)
-End Sub
-
 Function h_value(prob, ByVal attr As Integer) As Double
     Dim temp As Double
     temp = 0
@@ -708,6 +704,86 @@ Function u_ab_value(habmat, ByVal attr1, ByVal attr2) As Double
         uab_temp = 2 * (h_value_att(attr1) + h_value_att(attr2) - habmat(attr1, attr2)) / (h_value_att(attr1) + h_value_att(attr2))
         u_ab_value = uab_temp
     End If
+End Function
+
+Private Sub forward_click()
+    List1.Clear
+    Dim temp_goodness As Double
+    Dim i As Integer
+    
+    'select one attritube
+    Dim max_1_attr As Integer
+    Dim max_1_goodvalue As Double
+    max_1_goodvalue = 0
+    max_1_attr = 0
+    For i = 1 To 8
+        temp_goodness = uabmatrix(i, 9)
+        If temp_goodness > max_1_goodvalue Then
+            max_1_goodvalue = temp_goodness
+            max_1_attr = i
+        End If
+    Next
+    List1.AddItem "Select 1 Attritube : " & "A" & max_1_attr
+    List1.AddItem "Goodness : " & max_1_goodvalue
+    
+    'select two attritube
+    Dim max_2_attr As Integer
+    Dim max_2_goodvalue As Double
+    Dim denominator As Double
+    max_2_goodvalue = 0
+    max_2_attr = 0
+    For i = 1 To 8
+        denominator = (uabmatrix(max_1_attr, max_1_attr) + uabmatrix(max_1_attr, i) + uabmatrix(i, max_1_attr) + uabmatrix(i, i)) ^ 0.5
+        temp_goodness = (uabmatrix(max_1_attr, 9) + uabmatrix(i, 9)) / denominator
+        If temp_goodness > max_2_goodvalue Then
+            max_2_goodvalue = temp_goodness
+            max_2_attr = i
+        End If
+    Next
+    List1.AddItem "Select 2 Attritube : " & "A" & max_1_attr & " , A" & max_2_attr
+    List1.AddItem "Goodness : " & max_2_goodvalue
+    
+    'select three attritube
+    Dim max_3_attr As Integer
+    Dim max_3_goodvalue As Double
+    max_3_goodvalue = 0
+    max_3_attr = 0
+    For i = 1 To 8
+        If (i = max_1_attr) Or (i = max_2_attr) Then
+            max_3_goodvalue = max_3_goodvalue + 0
+        Else
+            'denominator = (uabmatrix(max_1_attr, max_1_attr) + uabmatrix(max_1_attr, i) + uabmatrix(i, max_1_attr) + uabmatrix(i, i)) ^ 0.5
+            temp_goodness = (uabmatrix(max_1_attr, 9) + uabmatrix(max_2_attr, 9) + uabmatrix(i, 9)) / denominator
+                If temp_goodness > max_3_goodvalue Then
+                    max_3_goodvalue = temp_goodness
+                    max_3_attr = i
+                End If
+        End If
+    Next
+    List1.AddItem "Select 3 Attritube : " & "A" & max_1_attr & " , A" & max_2_attr & ", A" & max_3_attr
+    List1.AddItem "Goodness : " & max_3_goodvalue
+End Sub
+
+Function feature_selection(selectsets, i) As Double
+    Dim maxgood As Double
+    Dim tempgood As Double
+    maxgood = 0
+    For i = 1 To 8
+        tempgood = goodness(selectsets, i)
+        If tempgood > maxgood Then
+            maxgood = tempgood
+            selectsets(i) = 1
+        End If
+    Next
+    feature_selection = maxgood
+End Function
+
+Function goodness(selectset, i) As Double
+    'For i = 1 To 8
+        'If selectset(i) = 1 Then
+            goodness = uabmatrix(i, 9) / (uabmatrix(i, i)) ^ (0.5)
+        'End If
+    'Next
 End Function
 
 Function log2(x As Double) As Double
